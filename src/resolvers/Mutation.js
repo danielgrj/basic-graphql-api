@@ -101,7 +101,7 @@ const Mutation = {
     return post;
   },
 
-  createComment(parent, { data }, { db }, info) {
+  createComment(parent, { data }, { db, pubsub }, info) {
     const { author, text, post } = data;
     const userExists = db.users.some(user => user.id === author);
     const postExists = db.posts.some(currentPost => currentPost.id === post && currentPost.published);
@@ -109,12 +109,14 @@ const Mutation = {
     if (!userExists || !postExists) throw new Error('Incorrect user or post');
 
     const comment = {
+      id: uuidv4(),
       author,
       post,
       text
     };
 
     db.comments.push(comment);
+    pubsub.publish(`comment ${post}`, { comment });
 
     return comment;
   },
